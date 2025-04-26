@@ -1,0 +1,5 @@
+venv
+.env
+logs/.
+input_Data
+Artifacts

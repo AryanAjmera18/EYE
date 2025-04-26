@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/DataScienceBootCamp/NetworkSecurity_MLproject/mlruns/0/e811b7a7ef1c4b7381e960c534117017/artifacts
+end_time: 1743463861665
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: e811b7a7ef1c4b7381e960c534117017
+run_name: chill-foal-50
+run_uuid: e811b7a7ef1c4b7381e960c534117017
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1743463855713
+status: 3
+tags: []
+user_id: aryan

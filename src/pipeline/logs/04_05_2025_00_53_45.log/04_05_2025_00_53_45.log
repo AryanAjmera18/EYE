@@ -1,0 +1,12 @@
+[2025-04-05 00:53:49,799] 1025 httpx - INFO - HTTP Request: GET https://dagshub.com/api/v1/user "HTTP/1.1 200 OK"
+[2025-04-05 00:53:49,804] 107 dagshub - INFO - Accessing as AryanAjmera18
+[2025-04-05 00:53:50,161] 1025 httpx - INFO - HTTP Request: GET https://dagshub.com/api/v1/repos/AryanAjmera18/NetworkSecurity_ML "HTTP/1.1 200 OK"
+[2025-04-05 00:53:50,654] 1025 httpx - INFO - HTTP Request: GET https://dagshub.com/api/v1/user "HTTP/1.1 200 OK"
+[2025-04-05 00:53:50,656] 107 dagshub - INFO - Initialized MLflow to track repo "AryanAjmera18/NetworkSecurity_ML"
+[2025-04-05 00:53:50,658] 107 dagshub - INFO - Repository AryanAjmera18/NetworkSecurity_ML initialized!
+[2025-04-05 00:53:57,496] 35 root - INFO - Start data Ingestion
+[2025-04-05 00:53:59,807] 60 root - INFO - Train set ,test set created 
+[2025-04-05 00:53:59,807] 61 root - INFO - Exited train test method of Data Ingestion_class 
+[2025-04-05 00:53:59,808] 66 root - INFO - Exporting train and test file
+[2025-04-05 00:53:59,852] 74 root - INFO - Exported train and test file path.
+[2025-04-05 00:53:59,853] 38 root - INFO - Data Ingestion completed and artifact: DataIngestionArtifacts(trained_file_path='Artifacts\\04_05_2025_00_53_45\\data_ingestion\\ingested\\train.csv', test_file_path='Artifacts\\04_05_2025_00_53_45\\data_ingestion\\ingested\\test.csv')

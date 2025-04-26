@@ -1,0 +1,16 @@
+python-dotenv
+pandas 
+numpy 
+certifi
+pymongo
+pymongo
+scikit-learn
+dill
+pyaml
+mlflow
+dagshub
+fastapi
+uvicorn
+pytorch
+torchvision
+##-e .
