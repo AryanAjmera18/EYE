@@ -4,7 +4,7 @@ import sys
 import random
 from torchvision import datasets
 from sklearn.model_selection import train_test_split
-from src.exception import NetworkSecurityException 
+from src.exception.NetworkSecurityException import NetworkSecurityException 
 from src.logging.logger import logging
 from src.entity.config_entity import DataIngestionConfig
 from src.entity.artifact_enity import DataIngestionArtifacts

@@ -3,7 +3,7 @@ import sys
 import yaml
 from src.entity.artifact_enity import DataIngestionArtifacts, DataValidationArtifacts
 from src.entity.config_entity import DataValidationConfig
-from src.exception import NetworkSecurityException
+from src.exception.NetworkSecurityException import NetworkSecurityException
 from src.logging.logger import logging
 
 class DataValidation:

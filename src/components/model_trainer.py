@@ -8,7 +8,7 @@ import mlflow
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 from src.logging.logger import logging
-from src.exception import NetworkSecurityException
+from src.exception.NetworkSecurityException import NetworkSecurityException
 from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_enity import ModelTrainerArtifacts, ClassificationMetricArtifacts
 

@@ -5,7 +5,7 @@ FROM pytorch/pytorch:2.2.2-cuda11.8-cudnn8-runtime
 WORKDIR /app
 
 # Copy code
-COPY . .
+COPY input_data /app/input_data
 
 # Install OS dependencies
 RUN apt-get update && apt-get install -y libgl1-mesa-glx

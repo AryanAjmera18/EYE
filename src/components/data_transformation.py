@@ -4,7 +4,7 @@ import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
-from src.exception import NetworkSecurityException
+from src.exception.NetworkSecurityException import NetworkSecurityException
 from src.logging.logger import logging
 from src.entity.config_entity import DataTransformationConfig
 from src.entity.artifact_enity import DataTransformationArtifacts, DataIngestionArtifacts
