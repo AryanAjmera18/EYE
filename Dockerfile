@@ -1,8 +1,19 @@
-FROM python:3.10-slim-buster
+# Use an official PyTorch image
+FROM pytorch/pytorch:2.2.2-cuda11.8-cudnn8-runtime
+
+# Set workdir inside container
 WORKDIR /app
-COPY . /app
 
-RUN apt update -y && apt install awscli -y
+# Copy code
+COPY . .
 
-RUN apt-get update && pip install -r requirements.txt
-CMD ["python3","app.py"]
+# Install OS dependencies
+RUN apt-get update && apt-get install -y libgl1-mesa-glx
+
+# Install Python dependencies
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+# Set default entrypoint to run training
+ENTRYPOINT ["python", "main.py"]
+

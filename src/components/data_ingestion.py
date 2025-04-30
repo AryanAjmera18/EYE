@@ -13,29 +13,29 @@ class DataIngestion:
     def __init__(self, data_ingestion_config: DataIngestionConfig):
         try:
             self.data_ingestion_config = data_ingestion_config
+
+            # Override hardcoded paths using environment variables if provided
+            self.input_data_dir = os.environ.get("INPUT_DATA_DIR", self.data_ingestion_config.input_data_dir)
+            self.feature_store_dir = os.environ.get("FEATURE_STORE_DIR", self.data_ingestion_config.feature_store_dir)
+            self.training_dir = os.environ.get("TRAIN_DIR", self.data_ingestion_config.training_dir)
+            self.testing_dir = os.environ.get("TEST_DIR", self.data_ingestion_config.testing_dir)
+
         except Exception as e:
             raise NetworkSecurityException(e, sys)
 
     def copy_input_data_to_feature_store(self):
         try:
-            input_data_dir = self.data_ingestion_config.input_data_dir
-            feature_store_dir = self.data_ingestion_config.feature_store_dir
+            if os.path.exists(self.feature_store_dir):
+                shutil.rmtree(self.feature_store_dir)
+            shutil.copytree(self.input_data_dir, self.feature_store_dir)
 
-            if os.path.exists(feature_store_dir):
-                shutil.rmtree(feature_store_dir)
-            shutil.copytree(input_data_dir, feature_store_dir)
-
-            logging.info(f"Copied input data to feature store at {feature_store_dir}")
+            logging.info(f"Copied input data to feature store at {self.feature_store_dir}")
         except Exception as e:
             raise NetworkSecurityException(e, sys)
 
     def split_data_as_train_test(self):
         try:
-            feature_store_dir = self.data_ingestion_config.feature_store_dir
-            train_dir = self.data_ingestion_config.training_dir
-            test_dir = self.data_ingestion_config.testing_dir
-
-            dataset = datasets.ImageFolder(feature_store_dir)
+            dataset = datasets.ImageFolder(self.feature_store_dir)
             total_size = len(dataset)
             indices = list(range(total_size))
             random.shuffle(indices)
@@ -47,7 +47,7 @@ class DataIngestion:
             idx_to_class = {v: k for k, v in class_to_idx.items()}
 
             # Create train and test folders
-            for target_dir in [train_dir, test_dir]:
+            for target_dir in [self.training_dir, self.testing_dir]:
                 if os.path.exists(target_dir):
                     shutil.rmtree(target_dir)
                 for class_name in class_to_idx.keys():
@@ -57,12 +57,12 @@ class DataIngestion:
             for idx in train_indices:
                 path, _ = dataset.samples[idx]
                 class_name = idx_to_class[dataset.targets[idx]]
-                shutil.copy(path, os.path.join(train_dir, class_name, os.path.basename(path)))
+                shutil.copy(path, os.path.join(self.training_dir, class_name, os.path.basename(path)))
 
             for idx in test_indices:
                 path, _ = dataset.samples[idx]
                 class_name = idx_to_class[dataset.targets[idx]]
-                shutil.copy(path, os.path.join(test_dir, class_name, os.path.basename(path)))
+                shutil.copy(path, os.path.join(self.testing_dir, class_name, os.path.basename(path)))
 
             logging.info("Train and Test split completed.")
         except Exception as e:
@@ -74,8 +74,8 @@ class DataIngestion:
             self.split_data_as_train_test()
 
             data_ingestion_artifacts = DataIngestionArtifacts(
-                trained_data_dir=self.data_ingestion_config.training_dir,
-                test_data_dir=self.data_ingestion_config.testing_dir
+                trained_data_dir=self.training_dir,
+                test_data_dir=self.testing_dir
             )
 
             logging.info("Data Ingestion process completed.")
@@ -83,5 +83,3 @@ class DataIngestion:
 
         except Exception as e:
             raise NetworkSecurityException(e, sys)
-
-

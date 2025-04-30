@@ -1,0 +1,19 @@
+[2025-04-29 18:13:55,327] 20 root - INFO - \U0001f680 Starting Eye Disease Detection Pipeline Execution
+[2025-04-29 18:13:55,327] 28 root - INFO - \U0001f4e5 Initiating Data Ingestion
+[2025-04-29 18:15:06,070] 28 root - INFO - Copied input data to feature store at Artifacts\04_29_2025_18_13_54\data_ingestion\feature_store
+[2025-04-29 18:16:18,545] 67 root - INFO - Train and Test split completed.
+[2025-04-29 18:16:18,546] 81 root - INFO - Data Ingestion process completed.
+[2025-04-29 18:16:18,546] 34 root - INFO - \u2705 Initiating Data Validation
+[2025-04-29 18:16:18,546] 79 root - INFO - Starting Data Validation Process...
+[2025-04-29 18:16:18,553] 73 root - INFO - Drift report saved at Artifacts\04_29_2025_18_13_54\data_validation\drift_report\report.yaml
+[2025-04-29 18:16:18,553] 40 root - INFO - \U0001f501 Initiating Data Transformation
+[2025-04-29 18:16:18,553] 21 root - INFO - Entered initiate_data_transformation method
+[2025-04-29 18:16:18,553] 23 root - INFO - Starting Data Transformation
+[2025-04-29 18:16:18,582] 48 root - INFO - Data Transformation completed successfully.
+[2025-04-29 18:16:18,582] 46 root - INFO - \U0001f9e0 Initiating Model Training
+[2025-04-29 18:19:26,637] 102 root - INFO - Epoch [1/1], Train Loss: 1.6844, Val Loss: 1.6789, F1: 0.0737
+[2025-04-29 18:19:36,382] 114 root - INFO - Saved full model to Artifacts\04_29_2025_18_13_54\model_trainer\trained_model\model.pkl
+[2025-04-29 18:19:36,386] 49 root - INFO - \U0001f4e6 Model Training Completed
+[2025-04-29 18:19:36,386] 55 root - INFO - \U0001f4e4 Exporting Model to ONNX
+[2025-04-29 18:19:36,386] 18 root - INFO - Starting PyTorch to ONNX export
+[2025-04-29 18:19:37,811] 46 root - INFO - Exported ONNX model to Artifacts/serving_models\model.onnx

@@ -1,14 +1,16 @@
-import os
-import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
-from src.exception import NetworkSecurityException
-from src.logging.logger import logging
-from src.entity.artifact_enity import ModelTrainerArtifacts, ClassificationMetricArtifacts
-from src.entity.config_entity import ModelTrainerConfig
+import os
+import sys
+import mlflow
 from sklearn.metrics import f1_score, precision_score, recall_score
+
+from src.logging.logger import logging
+from src.exception import NetworkSecurityException
+from src.entity.config_entity import ModelTrainerConfig
+from src.entity.artifact_enity import ModelTrainerArtifacts, ClassificationMetricArtifacts
 
 class EarlyStopping:
     def __init__(self, patience=3, verbose=False):
@@ -40,94 +42,92 @@ class ModelTrainer:
         try:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-            # Load pretrained ResNet50
-            model = models.resnet50(pretrained=True)
+            model = models.resnet50(weights=None)
             num_ftrs = model.fc.in_features
-            model.fc = nn.Linear(num_ftrs, len(train_loader.dataset.classes))  # Set correct output classes
+            model.fc = nn.Linear(num_ftrs, len(train_loader.dataset.classes))
             model = model.to(device)
 
-            # Define loss and optimizer
             criterion = nn.CrossEntropyLoss()
             optimizer = optim.Adam(model.parameters(), lr=0.001)
-
             early_stopping = EarlyStopping(patience=5, verbose=True)
-            best_val_loss = float('inf')
-            best_model_state = None
 
-            for epoch in range(self.num_epochs):
-                model.train()
-                running_loss = 0.0
+            # Use env variable or default local MLflow
+            tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000")
+            experiment_name = os.environ.get("MLFLOW_EXPERIMENT_NAME", "EyeDiseaseDetection")
 
-                for inputs, labels in train_loader:
-                    inputs, labels = inputs.to(device), labels.to(device)
-                    optimizer.zero_grad()
-                    outputs = model(inputs)
-                    loss = criterion(outputs, labels)
-                    loss.backward()
-                    optimizer.step()
-                    running_loss += loss.item() * inputs.size(0)
+            mlflow.set_tracking_uri(tracking_uri)
+            mlflow.set_experiment(experiment_name)
 
-                train_loss = running_loss / len(train_loader.dataset)
+            with mlflow.start_run(run_name="TrainingPipelineRun"):
+                mlflow.log_param("epochs", self.num_epochs)
 
-                # Validation
-                model.eval()
-                val_loss = 0.0
-                all_preds = []
-                all_labels = []
+                for epoch in range(self.num_epochs):
+                    model.train()
+                    running_loss = 0.0
 
-                with torch.no_grad():
-                    for inputs, labels in val_loader:
+                    for inputs, labels in train_loader:
                         inputs, labels = inputs.to(device), labels.to(device)
+                        optimizer.zero_grad()
                         outputs = model(inputs)
                         loss = criterion(outputs, labels)
-                        val_loss += loss.item() * inputs.size(0)
-                        preds = torch.argmax(outputs, dim=1)
-                        all_preds.extend(preds.cpu().numpy())
-                        all_labels.extend(labels.cpu().numpy())
+                        loss.backward()
+                        optimizer.step()
+                        running_loss += loss.item() * inputs.size(0)
 
-                val_loss = val_loss / len(val_loader.dataset)
+                    train_loss = running_loss / len(train_loader.dataset)
 
-                f1 = f1_score(all_labels, all_preds, average='macro')
-                precision = precision_score(all_labels, all_preds, average='macro')
-                recall = recall_score(all_labels, all_preds, average='macro')
+                    model.eval()
+                    val_loss = 0.0
+                    all_preds = []
+                    all_labels = []
 
-                logging.info(f"Epoch [{epoch+1}/{self.num_epochs}], Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, F1: {f1:.4f}")
+                    with torch.no_grad():
+                        for inputs, labels in val_loader:
+                            inputs, labels = inputs.to(device), labels.to(device)
+                            outputs = model(inputs)
+                            loss = criterion(outputs, labels)
+                            val_loss += loss.item() * inputs.size(0)
+                            preds = torch.argmax(outputs, dim=1)
+                            all_preds.extend(preds.cpu().numpy())
+                            all_labels.extend(labels.cpu().numpy())
 
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
-                    best_model_state = model.state_dict()
+                    val_loss /= len(val_loader.dataset)
 
-                early_stopping(val_loss)
-                if early_stopping.early_stop:
-                    logging.info("Early stopping triggered!")
-                    break
+                    f1 = f1_score(all_labels, all_preds, average='macro')
+                    precision = precision_score(all_labels, all_preds, average='macro', zero_division=0)
+                    recall = recall_score(all_labels, all_preds, average='macro', zero_division=0)
 
-            # Save Best Model
-            model_save_path = self.model_trainer_config.trained_model_file_path
-            os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
-            torch.save(best_model_state, model_save_path)
-            logging.info(f"Saved best model at: {model_save_path}")
+                    mlflow.log_metric("val_loss", val_loss, step=epoch)
+                    mlflow.log_metric("train_loss", train_loss, step=epoch)
+                    mlflow.log_metric("f1_score", f1, step=epoch)
+                    mlflow.log_metric("precision", precision, step=epoch)
+                    mlflow.log_metric("recall", recall, step=epoch)
 
-            # Prepare Artifact
-            train_metrics = ClassificationMetricArtifacts(
-                f1_score=f1,
-                precision_score=precision,
-                recall_score=recall
-            )
+                    logging.info(f"Epoch [{epoch+1}/{self.num_epochs}], Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, F1: {f1:.4f}")
 
-            test_metrics = ClassificationMetricArtifacts(
-                f1_score=f1,
-                precision_score=precision,
-                recall_score=recall
-            )
+                    early_stopping(val_loss)
+                    if early_stopping.early_stop:
+                        logging.info("Early stopping triggered!")
+                        break
 
-            trainer_artifact = ModelTrainerArtifacts(
-                trained_model_file_path=model_save_path,
-                train_metric_artifact=train_metrics,
-                test_metric_artifact=test_metrics
-            )
+                # Save model
+                base_model_dir = os.environ.get("MODEL_SAVE_DIR", os.path.dirname(self.model_trainer_config.trained_model_file_path))
+                os.makedirs(base_model_dir, exist_ok=True)
+                model_save_path = os.path.join(base_model_dir, "model.pth")
 
-            return trainer_artifact
+                torch.save(model, model_save_path)
+                mlflow.pytorch.log_model(model, "model")
+
+                logging.info(f"Model saved locally at {model_save_path} and logged to MLflow.")
+
+                train_metrics = ClassificationMetricArtifacts(f1_score=f1, precision_score=precision, recall_score=recall)
+                test_metrics = ClassificationMetricArtifacts(f1_score=f1, precision_score=precision, recall_score=recall)
+
+                return ModelTrainerArtifacts(
+                    trained_model_file_path=model_save_path,
+                    train_metric_artifact=train_metrics,
+                    test_metric_artifact=test_metrics
+                )
 
         except Exception as e:
             raise NetworkSecurityException(e, sys)

@@ -13,4 +13,6 @@ fastapi
 uvicorn
 pytorch
 torchvision
+onnx
+onnxruntime
 ##-e .

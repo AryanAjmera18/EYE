@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/MlopsProj/mlruns/199528010674792386/1db38c7562124b24b54c9275529a51af/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '199528010674792386'
+lifecycle_stage: active
+run_id: 1db38c7562124b24b54c9275529a51af
+run_name: industrious-bug-760
+run_uuid: 1db38c7562124b24b54c9275529a51af
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1745962590364
+status: 1
+tags: []
+user_id: aryan
