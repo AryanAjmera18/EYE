@@ -1,5 +1,5 @@
-from networkSecurity.entity.config_entity import TrainingPipelineConfig, DataIngestionConfig
-from networkSecurity.components.data_ingestion import DataIngestion
+from src.entity.config_entity import TrainingPipelineConfig, DataIngestionConfig
+from src.components.data_ingestion import DataIngestion
 
 # Step 1: Create TrainingPipelineConfig
 training_pipeline_config = TrainingPipelineConfig()

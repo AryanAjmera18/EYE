@@ -1,0 +1,21 @@
+[2025-05-09 02:28:13,546] 20 root - INFO - \U0001f680 Starting Eye Disease Detection Pipeline Execution
+[2025-05-09 02:28:13,546] 28 root - INFO - \U0001f4e5 Initiating Data Ingestion
+[2025-05-09 02:29:24,196] 32 root - INFO - Copied input data to feature store at Artifacts\05_09_2025_02_28_12\data_ingestion\feature_store
+[2025-05-09 02:30:39,265] 67 root - INFO - Train and Test split completed.
+[2025-05-09 02:30:39,266] 81 root - INFO - Data Ingestion process completed.
+[2025-05-09 02:30:39,266] 34 root - INFO - \u2705 Initiating Data Validation
+[2025-05-09 02:30:39,266] 81 root - INFO - Starting Data Validation Process...
+[2025-05-09 02:30:39,273] 75 root - INFO - Drift report saved at Artifacts\05_09_2025_02_28_12\data_validation\drift_report\report.yaml
+[2025-05-09 02:30:39,274] 40 root - INFO - \U0001f501 Initiating Data Transformation
+[2025-05-09 02:30:39,274] 52 root - INFO - Entered initiate_data_transformation method
+[2025-05-09 02:30:39,274] 54 root - INFO - \U0001f501 Starting Data Transformation
+[2025-05-09 02:30:39,274] 74 root - INFO - \U0001f5bc\ufe0f Transforming and saving training images...
+[2025-05-09 02:31:53,691] 77 root - INFO - \U0001f5bc\ufe0f Transforming and saving validation images...
+[2025-05-09 02:36:49,124] 87 root - INFO - \u2705 Data Transformation completed successfully.
+[2025-05-09 02:36:49,124] 46 root - INFO - \U0001f9e0 Initiating Model Training
+[2025-05-09 02:38:11,774] 106 root - INFO - Epoch [1/1], Train Loss: 1.8156, Val Loss: 1.6501, F1: 0.0611
+[2025-05-09 02:38:22,615] 121 root - INFO - Model saved locally at Artifacts\05_09_2025_02_28_12\model_trainer\trained_model\model.pth and logged to MLflow.
+[2025-05-09 02:38:22,655] 49 root - INFO - \U0001f4e6 Model Training Completed
+[2025-05-09 02:38:22,655] 55 root - INFO - \U0001f4e4 Exporting Model to ONNX
+[2025-05-09 02:38:22,655] 18 root - INFO - \U0001f680 Starting PyTorch to ONNX export...
+[2025-05-09 02:38:24,649] 51 root - INFO - \u2705 ONNX model successfully exported to: Artifacts/serving_models\model.onnx

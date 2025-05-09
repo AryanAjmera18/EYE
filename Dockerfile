@@ -16,4 +16,3 @@ RUN pip install -r requirements.txt
 
 # Set default entrypoint to run training
 ENTRYPOINT ["python", "main.py"]
-

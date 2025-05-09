@@ -1,0 +1,8 @@
+[2025-05-01 01:56:56,738] 20 root - INFO - \U0001f680 Starting Eye Disease Detection Pipeline Execution
+[2025-05-01 01:56:56,739] 28 root - INFO - \U0001f4e5 Initiating Data Ingestion
+[2025-05-01 01:58:17,268] 32 root - INFO - Copied input data to feature store at Artifacts\05_01_2025_01_56_55\data_ingestion\feature_store
+[2025-05-01 01:59:34,113] 67 root - INFO - Train and Test split completed.
+[2025-05-01 01:59:34,114] 81 root - INFO - Data Ingestion process completed.
+[2025-05-01 01:59:34,114] 34 root - INFO - \u2705 Initiating Data Validation
+[2025-05-01 01:59:34,114] 81 root - INFO - Starting Data Validation Process...
+[2025-05-01 01:59:34,121] 75 root - INFO - Drift report saved at Artifacts\05_01_2025_01_56_55\data_validation\drift_report\report.yaml

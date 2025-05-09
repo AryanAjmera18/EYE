@@ -11,7 +11,7 @@ from src.entity.config_entity import (
     ModelTrainerConfig,
     TrainingPipelineConfig,
 )
-from src.exception import NetworkSecurityException
+from src.exception.NetworkSecurityException import NetworkSecurityException
 from src.logging.logger import logging
 from model_serving.export_to_onnx import export_pytorch_to_onnx
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
         # 4. Model Training
         model_trainer_config = ModelTrainerConfig(training_pipeline_config)
-        model_trainer = ModelTrainer(model_trainer_config, num_epochs=int(os.getenv("NUM_EPOCHS", 10)))
+        model_trainer = ModelTrainer(model_trainer_config, num_epochs=int(os.getenv("NUM_EPOCHS", 1)))
         logging.info("🧠 Initiating Model Training")
         model_trainer_artifact = model_trainer.initiate_model_trainer(train_loader, val_loader)
 

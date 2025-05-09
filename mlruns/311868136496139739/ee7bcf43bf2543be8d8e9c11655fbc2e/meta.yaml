@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/MlopsProj/mlruns/311868136496139739/ee7bcf43bf2543be8d8e9c11655fbc2e/artifacts
+end_time: 1746772062462
+entry_point_name: ''
+experiment_id: '311868136496139739'
+lifecycle_stage: active
+run_id: ee7bcf43bf2543be8d8e9c11655fbc2e
+run_name: TrainingPipelineRun
+run_uuid: ee7bcf43bf2543be8d8e9c11655fbc2e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1746771995021
+status: 4
+tags: []
+user_id: aryan
