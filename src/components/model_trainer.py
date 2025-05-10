@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
-from torchvision.models import DenseNet121_Weights, MobileNet_V3_Large_Weights
 import os
 import sys
 import mlflow
@@ -15,7 +14,7 @@ from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_enity import ModelTrainerArtifacts, ClassificationMetricArtifacts
 
 class EarlyStopping:
-    def __init__(self, patience=40, verbose=False):
+    def __init__(self, patience=30, verbose=False):
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
@@ -23,62 +22,45 @@ class EarlyStopping:
         self.early_stop = False
 
     def __call__(self, val_loss):
-        if self.best_loss is None:
+        if self.best_loss is None or val_loss < self.best_loss:
             self.best_loss = val_loss
-        elif val_loss > self.best_loss:
+            self.counter = 0
+        else:
             self.counter += 1
             if self.verbose:
                 logging.info(f"EarlyStopping counter: {self.counter} out of {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
-        else:
-            self.best_loss = val_loss
-            self.counter = 0
-
-def get_model(arch: str, num_classes: int, freeze_layers: bool = True, device='cpu'):
-    if arch == "mobilenetv3":
-        model = models.mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.DEFAULT)
-        total_blocks = len(model.features)
-        for idx, module in enumerate(model.features):
-            if idx < total_blocks - 2 and freeze_layers:
-                for param in module.parameters():
-                    param.requires_grad = False
-        model.classifier = nn.Sequential(
-            nn.Linear(model.classifier[0].in_features, 512),
-            nn.ReLU(),
-            nn.Dropout(0.4),
-            nn.Linear(512, num_classes)
-        )
-    elif arch == "densenet121":
-        model = models.densenet121(weights=DenseNet121_Weights.DEFAULT)
-        features = list(model.features.children())
-        total_blocks = len(features)
-        for idx, module in enumerate(features):
-            if idx < total_blocks - 2 and freeze_layers:
-                for param in module.parameters():
-                    param.requires_grad = False
-        model.classifier = nn.Sequential(
-            nn.Dropout(0.4),
-            nn.Linear(model.classifier.in_features, num_classes)
-        )
-    else:
-        raise ValueError(f"Unsupported architecture: {arch}")
-    
-    return model.to(device)
 
 class ModelTrainer:
-    def __init__(self, model_trainer_config: ModelTrainerConfig, num_epochs=1, architecture="mobilenetv3"):
+    def __init__(self, model_trainer_config: ModelTrainerConfig, num_epochs=1):
         self.model_trainer_config = model_trainer_config
         self.num_epochs = num_epochs
-        self.architecture = architecture
 
     def initiate_model_trainer(self, train_loader, val_loader):
         try:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-            model = get_model(self.architecture, len(train_loader.dataset.classes), freeze_layers=True, device=device)
+            num_classes = len(train_loader.dataset.classes)
+
+            model = models.densenet121(weights=models.DenseNet121_Weights.DEFAULT)
+
+            # Freeze all but last 2 blocks
+            features = list(model.features.children())
+            for idx, module in enumerate(features):
+                if idx < len(features) - 2:
+                    for param in module.parameters():
+                        param.requires_grad = False
+
+            # Replace classifier
+            model.classifier = nn.Sequential(
+                nn.Dropout(0.4),
+                nn.Linear(model.classifier.in_features, num_classes)
+            )
+
+            model = model.to(device)
 
             criterion = nn.CrossEntropyLoss()
-            optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+            optimizer = optim.Adam(model.parameters(), lr=0.001)
             early_stopping = EarlyStopping(patience=25, verbose=True)
 
             tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000")
@@ -93,7 +75,6 @@ class ModelTrainer:
 
             with mlflow.start_run(run_name="TrainingPipelineRun"):
                 mlflow.log_param("epochs", self.num_epochs)
-                mlflow.log_param("architecture", self.architecture)
 
                 for epoch in range(self.num_epochs):
                     model.train()
@@ -113,19 +94,22 @@ class ModelTrainer:
                         "recall": recall
                     }, step=epoch)
 
-                    logging.info(f"Epoch [{epoch+1}/{self.num_epochs}], Train Loss: {train_loss:.4f}, "
-                                 f"Val Loss: {val_loss:.4f}, F1: {f1:.4f}")
+                    print(f"Epoch {epoch+1}/{self.num_epochs} | "
+                          f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
+                          f"F1: {f1:.4f} | Precision: {precision:.4f} | Recall: {recall:.4f}")
 
                     early_stopping(val_loss)
                     if early_stopping.early_stop:
+                        print("🛑 Early stopping triggered!")
                         break
 
                 model_dir = os.environ.get("MODEL_SAVE_DIR", os.path.dirname(self.model_trainer_config.trained_model_file_path))
                 os.makedirs(model_dir, exist_ok=True)
                 model_path = os.path.join(model_dir, "model.pth")
                 torch.save(model, model_path)
+
                 mlflow.pytorch.log_model(model, "model")
-                logging.info(f"✅ Model saved at: {model_path}")
+                logging.info(f"✅ Model saved locally at {model_path} and logged to MLflow.")
 
                 metrics = ClassificationMetricArtifacts(f1, precision, recall)
                 return ModelTrainerArtifacts(model_path, metrics, metrics)

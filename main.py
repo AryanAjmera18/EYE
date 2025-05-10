@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
         # 4. Model Training
         model_trainer_config = ModelTrainerConfig(training_pipeline_config)
-        model_trainer = ModelTrainer(model_trainer_config, num_epochs=int(os.getenv("NUM_EPOCHS", 10)))
+        model_trainer = ModelTrainer(model_trainer_config, num_epochs=int(os.getenv("NUM_EPOCHS", 100)))
         logging.info("🧠 Initiating Model Training")
         model_trainer_artifact = model_trainer.initiate_model_trainer(train_loader, val_loader)
 
@@ -50,7 +50,6 @@ if __name__ == "__main__":
         print(f"✅ Model saved at: {model_trainer_artifact.trained_model_file_path}")
         print(f"📊 Training F1 Score: {model_trainer_artifact.train_metric_artifact.f1_score:.4f}")
         print(f"📊 Validation F1 Score: {model_trainer_artifact.test_metric_artifact.f1_score:.4f}")
-
         # 5. Export to ONNX
         logging.info("📤 Exporting Model to ONNX")
         export_pytorch_to_onnx(model_trainer_artifact.trained_model_file_path)
