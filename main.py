@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
         # 4. Model Training
         model_trainer_config = ModelTrainerConfig(training_pipeline_config)
-        model_trainer = ModelTrainer(model_trainer_config, num_epochs=int(os.getenv("NUM_EPOCHS", 1)))
+        model_trainer = ModelTrainer(model_trainer_config, num_epochs=int(os.getenv("NUM_EPOCHS", 10)))
         logging.info("🧠 Initiating Model Training")
         model_trainer_artifact = model_trainer.initiate_model_trainer(train_loader, val_loader)
 
