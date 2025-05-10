@@ -14,7 +14,7 @@ from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_enity import ModelTrainerArtifacts, ClassificationMetricArtifacts
 
 class EarlyStopping:
-    def __init__(self, patience=3, verbose=False):
+    def __init__(self, patience=10, verbose=False):
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
