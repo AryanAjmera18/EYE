@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
+from torchvision.models import DenseNet121_Weights, MobileNet_V3_Large_Weights
 import os
 import sys
 import mlflow
@@ -14,7 +15,7 @@ from src.entity.config_entity import ModelTrainerConfig
 from src.entity.artifact_enity import ModelTrainerArtifacts, ClassificationMetricArtifacts
 
 class EarlyStopping:
-    def __init__(self, patience=10, verbose=False):
+    def __init__(self, patience=40, verbose=False):
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
@@ -34,22 +35,51 @@ class EarlyStopping:
             self.best_loss = val_loss
             self.counter = 0
 
+def get_model(arch: str, num_classes: int, freeze_layers: bool = True, device='cpu'):
+    if arch == "mobilenetv3":
+        model = models.mobilenet_v3_large(weights=MobileNet_V3_Large_Weights.DEFAULT)
+        total_blocks = len(model.features)
+        for idx, module in enumerate(model.features):
+            if idx < total_blocks - 2 and freeze_layers:
+                for param in module.parameters():
+                    param.requires_grad = False
+        model.classifier = nn.Sequential(
+            nn.Linear(model.classifier[0].in_features, 512),
+            nn.ReLU(),
+            nn.Dropout(0.4),
+            nn.Linear(512, num_classes)
+        )
+    elif arch == "densenet121":
+        model = models.densenet121(weights=DenseNet121_Weights.DEFAULT)
+        features = list(model.features.children())
+        total_blocks = len(features)
+        for idx, module in enumerate(features):
+            if idx < total_blocks - 2 and freeze_layers:
+                for param in module.parameters():
+                    param.requires_grad = False
+        model.classifier = nn.Sequential(
+            nn.Dropout(0.4),
+            nn.Linear(model.classifier.in_features, num_classes)
+        )
+    else:
+        raise ValueError(f"Unsupported architecture: {arch}")
+    
+    return model.to(device)
+
 class ModelTrainer:
-    def __init__(self, model_trainer_config: ModelTrainerConfig, num_epochs=1):
+    def __init__(self, model_trainer_config: ModelTrainerConfig, num_epochs=1, architecture="mobilenetv3"):
         self.model_trainer_config = model_trainer_config
         self.num_epochs = num_epochs
+        self.architecture = architecture
 
     def initiate_model_trainer(self, train_loader, val_loader):
         try:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-            model = models.resnet50(weights=None)
-            model.fc = nn.Linear(model.fc.in_features, len(train_loader.dataset.classes))
-            model = model.to(device)
+            model = get_model(self.architecture, len(train_loader.dataset.classes), freeze_layers=True, device=device)
 
             criterion = nn.CrossEntropyLoss()
-            optimizer = optim.Adam(model.parameters(), lr=0.001)
-            early_stopping = EarlyStopping(patience=5, verbose=True)
+            optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+            early_stopping = EarlyStopping(patience=25, verbose=True)
 
             tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://localhost:5000")
             experiment_name = os.environ.get("MLFLOW_EXPERIMENT_NAME", "EyeDiseaseDetection")
@@ -63,6 +93,7 @@ class ModelTrainer:
 
             with mlflow.start_run(run_name="TrainingPipelineRun"):
                 mlflow.log_param("epochs", self.num_epochs)
+                mlflow.log_param("architecture", self.architecture)
 
                 for epoch in range(self.num_epochs):
                     model.train()
@@ -93,9 +124,8 @@ class ModelTrainer:
                 os.makedirs(model_dir, exist_ok=True)
                 model_path = os.path.join(model_dir, "model.pth")
                 torch.save(model, model_path)
-
                 mlflow.pytorch.log_model(model, "model")
-                logging.info(f"Model saved locally at {model_path} and logged to MLflow.")
+                logging.info(f"✅ Model saved at: {model_path}")
 
                 metrics = ClassificationMetricArtifacts(f1, precision, recall)
                 return ModelTrainerArtifacts(model_path, metrics, metrics)
